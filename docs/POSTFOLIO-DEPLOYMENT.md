@@ -10,15 +10,15 @@
 
 ## Current repository state
 
-The repository is an upstream Reactive Resume v6 source copy. The target MCP server currently uses `@modelcontextprotocol/sdk` v1.x and a Streamable HTTP transport handler. Its local tests expect the 2025-11-25 initialize flow.
+The repository is an upstream Reactive Resume v6 source copy. The MCP implementation is being migrated to `@modelcontextprotocol/server` v2 and `createMcpHandler`, the official TypeScript SDK entry point for MCP 2026-07-28. The application still needs tests and integration verification before it can claim conformance.
 
 ## Next engineering steps
 
-1. Implement a conformant stateless transport using an SDK/revision that explicitly supports MCP 2026-07-28. Do not claim conformance by merely wrapping the old transport or rejecting initialize inside it.
+1. Complete the SDK v2 migration end to end. Use `createMcpHandler` and a fresh server per request. Do not manually reject `initialize` while still relying on the v1 transport.
 2. Keep OAuth endpoints on the app origin. Verify protected-resource metadata, authorization-server metadata, registration/PKCE behavior, and consent in an end-to-end test.
 3. Add protocol tests for POST JSON request handling, no initialize exchange, no protocol session IDs, request-version metadata as required by the target revision, JSON responses for non-streaming tool calls, and request-scoped streaming only where called for.
 4. Keep the existing resume schema and import/export contracts compatible with upstream until a justified schema migration exists.
-5. Package and build locally, run focused tests, type checks, and full CI before deploying.
+5. Regenerate `pnpm-lock.yaml` using the repository's pinned pnpm version, then run focused tests, type checks, full CI, and a production build before deploying.
 6. Choose deployment target: Moria Docker is likely the most directly controllable if PostgreSQL and storage capacity are available; Cloudflare Workers is possible but requires Workers Paid, PostgreSQL via Hyperdrive, private R2 storage and Durable Objects according to upstream documentation.
 7. Once there is a reachable deployment origin, configure Cloudflare DNS for `postfolio.working-draft.org`; ensure TLS, reverse proxy, OAuth APP_URL and trusted proxy configuration match that exact host.
 8. Verify `https://postfolio.working-draft.org/api/health`, MCP discovery metadata, OAuth authorization, resume import/create/export, and backup/restore before inviting external users.
