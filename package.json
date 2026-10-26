@@ -54,6 +54,7 @@
 		"test:cloudflare": "node tooling/cloudflare/smoke.mjs"
 	},
 	"devDependencies": {
+		"@modelcontextprotocol/sdk": "^1.32.2",
 		"@modelcontextprotocol/server": "^2.4.0",
 		"@modelcontextprotocol/node": "^2.1.2",
 		"@commitlint/cli": "^21.2.4",
