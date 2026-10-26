@@ -54,6 +54,8 @@
 		"test:cloudflare": "node tooling/cloudflare/smoke.mjs"
 	},
 	"devDependencies": {
+		"@modelcontextprotocol/server": "^2.4.0",
+		"@modelcontextprotocol/node": "^2.1.2",
 		"@commitlint/cli": "^21.2.4",
 		"@commitlint/config-conventional": "^21.2.4",
 		"@dotenvx/dotenvx": "^2.38.2",
