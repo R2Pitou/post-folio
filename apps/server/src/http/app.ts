@@ -124,6 +124,7 @@ export function createApp(options: AppOptions = {}) {
 	app.get("/uploads/*", (c) => handleUpload(c.req.raw));
 	app.get("/schema.json", () => handleSchemaJson());
 	app.get("/openapi.json", () => handleOpenApiDocument());
+	app.all("/mcp", (c) => handleMcp(c.req.raw, client(c)));
 	app.all("/mcp/*", (c) => handleMcp(c.req.raw, client(c)));
 
 	app.get("/.well-known/apple-app-site-association", () => handleAppleAppSiteAssociation());
