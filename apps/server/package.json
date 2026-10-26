@@ -37,7 +37,7 @@
 		"@formepdf/core": "0.29.0",
 		"@formepdf/react": "0.29.0",
 		"@hono/node-server": "^2.1.5",
-		"@modelcontextprotocol/sdk": "^1.32.2",
+		"@modelcontextprotocol/server": "^2.4.0",
 		"@orpc/client": "catalog:",
 		"@orpc/experimental-ratelimit": "^1.16.1",
 		"@orpc/json-schema": "^1.16.1",
