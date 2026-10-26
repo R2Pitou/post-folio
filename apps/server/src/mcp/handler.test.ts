@@ -1,8 +1,7 @@
 import { beforeEach, expect, it, vi } from "vite-plus/test";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ORPCError } from "@orpc/server";
 
-const mocks = vi.hoisted(() => ({ authentication: vi.fn(), limit: vi.fn() }));
+const mocks = vi.hoisted(() => ({ authentication: vi.fn(), limit: vi.fn(), sdkFetch: vi.fn() }));
 vi.mock("@reactive-resume/env/server", () => ({ env: { APP_URL: "https://resume.example" } }));
 vi.mock("@reactive-resume/api/context", () => ({ resolveAuthenticationFromRequestHeaders: mocks.authentication }));
 vi.mock("@reactive-resume/api/features/mcp/transport", () => ({
@@ -10,7 +9,7 @@ vi.mock("@reactive-resume/api/features/mcp/transport", () => ({
   consumeMcpUserLimit: mocks.limit,
 }));
 vi.mock("./server", () => ({
-  createMcpServer: () => new McpServer({ name: "transport-test", version: "1.0.0" }),
+  createAuthenticatedMcpHandler: vi.fn(() => ({ fetch: mocks.sdkFetch })),
 }));
 
 import { handleMcp } from "./handler";
@@ -19,33 +18,33 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.limit.mockResolvedValue(undefined);
   mocks.authentication.mockResolvedValue({ user: { id: "user-1" }, method: "bearer", permissions: ["read"] });
+  mocks.sdkFetch.mockImplementation(async (request: Request) => new Response(JSON.stringify({ jsonrpc: "2.0", id: 1, result: { ok: true } }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  }));
 });
 
-function request(body: unknown, origin?: string) {
+function request(body: unknown, origin?: string, headers: Record<string, string> = {}) {
   return new Request("https://resume.example/mcp", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...headers,
       ...(origin && { Origin: origin }),
     },
     body: JSON.stringify(body),
   });
 }
 
-it("rejects initialize handshakes in stateless mode", async () => {
+it("routes valid requests to the SDK v2 per-request handler without an initialize exchange", async () => {
   const response = await handleMcp(request({
-    jsonrpc: "2.0", id: 1, method: "initialize",
-    params: { protocolVersion: "2026-07-28", capabilities: {}, clientInfo: { name: "test", version: "1" } },
-  }), "127.0.0.1");
-  expect(response.status).toBe(400);
-  expect(await response.json()).toMatchObject({ error: { message: expect.stringContaining("does not support initialization") } });
-  expect(mocks.authentication).not.toHaveBeenCalled();
-});
-
-it("rejects initialized notifications because no handshake exists", async () => {
-  const response = await handleMcp(request({ jsonrpc: "2.0", method: "notifications/initialized" }), "127.0.0.1");
-  expect(response.status).toBe(400);
+    jsonrpc: "2.0", id: 1, method: "tools/list",
+    params: { _meta: { "io.modelcontextprotocol/protocolVersion": "2026-07-28" } },
+  }), undefined, { "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "tools/list", "Mcp-Name": "tools/list" });
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(mocks.sdkFetch).toHaveBeenCalledOnce();
 });
 
 it("rejects foreign origins before authentication", async () => {
@@ -63,11 +62,7 @@ it("rejects GET and non-JSON requests", async () => {
   expect(form.status).toBe(415);
 });
 
-it("rejects malformed JSON and oversized payloads", async () => {
-  const malformed = await handleMcp(new Request("https://resume.example/mcp", {
-    method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: "{",
-  }));
-  expect(malformed.status).toBe(400);
+it("rejects oversized payloads", async () => {
   const large = await handleMcp(new Request("https://resume.example/mcp", {
     method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ data: "x".repeat(4 * 1024 * 1024) }),
   }));
