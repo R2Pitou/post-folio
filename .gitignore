@@ -90,3 +90,6 @@ temp
 # Lingui compile output (the fill-translations gate compiles to validate; the apps load .po directly)
 /apps/*/locales/*.js
 .aider*
+
+# ChatGPT-Gutter-trash-go-tier-hacks
+tooling/run-postfolio-migration.ps1
