@@ -15,7 +15,7 @@
 		"test:ci": "vp test run --reporter=default --reporter=github-actions --reporter=json --reporter=junit --outputFile.json=reports/vitest-results.json --outputFile.junit=reports/vitest-junit.xml --passWithNoTests"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.32.2",
+		"@modelcontextprotocol/server": "^2.4.0",
 		"@orpc/server": "catalog:",
 		"@reactive-resume/ai": "workspace:*",
 		"@reactive-resume/api": "workspace:*",
